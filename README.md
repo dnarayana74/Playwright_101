@@ -1,4 +1,4 @@
-# Cypress LambdaTest Parallel Automation
+# Playwright LambdaTest Parallel Automation
 
 ## Overview
 This project automates:
