@@ -2,11 +2,11 @@ name: Playwright CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
-  contents: write # Needed for pushing to gh-pages
+  contents: write
   pages: write
   id-token: write
 
@@ -34,7 +34,21 @@ jobs:
       - name: Run Playwright tests
         run: npx playwright test --reporter=html
 
-      # Save artifact for download
+      - name: Debug – List files after test run
+        run: |
+          echo "Root directory:"
+          ls -al
+          echo "Checking playwright-report folder:"
+          ls -al playwright-report || echo "❌ playwright-report folder NOT FOUND"
+
+      - name: Ensure report exists
+        run: |
+          if [ ! -d "playwright-report" ]; then
+            echo "❌ ERROR: playwright-report folder missing. Tests may have failed or wrong paths."
+            exit 1
+          fi
+          echo "✅ playwright-report folder found"
+
       - name: Upload Playwright report artifact
         uses: actions/upload-artifact@v4
         with:
@@ -42,23 +56,20 @@ jobs:
           path: playwright-report
           overwrite: true
 
-      # ---- Deploy Report to GitHub Pages ----
       - name: Deploy to GitHub Pages
         run: |
-          # Prepare gh-pages branch
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Create or reset gh-pages branch
+          # Create/reset gh-pages branch
           git checkout -B gh-pages
 
-          # Clear old files
-          rm -rf ./*
+          # Delete all files except .git folder safely
+          find . -mindepth 1 ! -regex '^./\.git.*' -delete
 
-          # Copy new report
-          cp -r playwright-report/* ./
+          # Copy Playwright HTML report into root of gh-pages
+          cp -r playwright-report/* .
 
-          # Commit and push
           git add .
           git commit -m "Update Playwright Report" || echo "No changes to commit"
           git push -f origin gh-pages
