@@ -49,3 +49,9 @@ jobs:
           name: playwright-report
           path: playwright-report
           overwrite: true
+
+      - name: Deploy Playwright Report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./playwright-report
