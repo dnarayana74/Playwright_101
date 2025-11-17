@@ -1,4 +1,4 @@
-name: Playwright CI
+name: Playwright Tests
 
 on:
   push:
@@ -15,10 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,45 +29,19 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright tests
+      - name: Run Playwright Tests
         run: npx playwright test --reporter=html
 
-      - name: Debug – List files after test run
-        run: |
-          echo "Root directory:"
-          ls -al
-          echo "Checking playwright-report folder:"
-          ls -al playwright-report || echo "❌ playwright-report folder NOT FOUND"
-
-      - name: Ensure report exists
-        run: |
-          if [ ! -d "playwright-report" ]; then
-            echo "❌ ERROR: playwright-report folder missing. Tests may have failed or wrong paths."
-            exit 1
-          fi
-          echo "✅ playwright-report folder found"
-
-      - name: Upload Playwright report artifact
+      - name: Upload Test Report as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report
           overwrite: true
 
-      - name: Deploy to GitHub Pages
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Create/reset gh-pages branch
-          git checkout -B gh-pages
-
-          # Delete all files except .git folder safely
-          find . -mindepth 1 ! -regex '^./\.git.*' -delete
-
-          # Copy Playwright HTML report into root of gh-pages
-          cp -r playwright-report/* .
-
-          git add .
-          git commit -m "Update Playwright Report" || echo "No changes to commit"
-          git push -f origin gh-pages
+      - name: Deploy report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: playwright-report
+          publish_branch: gh-pages
