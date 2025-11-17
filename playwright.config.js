@@ -6,6 +6,7 @@ export default defineConfig({
     headless: true,
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    baseURL: 'https://www.lambdatest.com/selenium-playground',
     trace: 'on', // Enable traceviewer for debugging
     console: 'retain', // Retain console logs
 
