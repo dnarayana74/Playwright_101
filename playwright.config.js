@@ -1,7 +1,12 @@
 import { defineConfig } from '@playwright/test';
-const { test, expect } = require('@playwright/test');
 
 export default defineConfig({
+  reporter: [
+    ['line'],
+    ['allure-playwright'],
+    ['html', { open: 'never' }]
+  ],
+
   use: {
     headless: true,
     video: 'retain-on-failure',
@@ -30,8 +35,3 @@ export default defineConfig({
     },
   ],
 });
-
-module.exports = defineConfig({
-  reporter: [['html', { open: 'never' }]], // Enables HTML report
-});
-
