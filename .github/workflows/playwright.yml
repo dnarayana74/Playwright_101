@@ -1,148 +1,83 @@
-name: Playwright + Allure + Monocart (Publish Reports)
+name: Playwright Tests & Reports
 
 on:
-  workflow_dispatch: # Manual trigger
   push:
-    branches: [main] # Auto-trigger on main
-
-permissions:
-  contents: write # REQUIRED for gh-pages publishing
+    branches: [main]
+  pull_request:
 
 jobs:
   test-and-publish:
     runs-on: ubuntu-latest
 
     steps:
-      # -------------------------
-      # 1. Checkout repo
-      # -------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # -------------------------
-      # 2. Download previous Allure history (if exists)
-      # -------------------------
-      - name: Download Allure History
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-history
-          path: allure-results/history
-        continue-on-error: true # ✅ correct place
-
-      # -------------------------
-      # 3. Setup Node.js
-      # -------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # -------------------------
-      # 4. Install dependencies
-      # -------------------------
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      # -------------------------
-      # 5. Install Playwright Browsers
-      # -------------------------
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      # -------------------------
-      # 6. Install Allure CLI(Global)
-      # -------------------------
-      - name: Install Allure CLI
-        run: npm install -g allure-commandline --unsafe-perm=true
+      - name: Run Tests
+        env:
+          LT_USERNAME: process.env.LT_USERNAME
+          LT_ACCESS_KEY: process.env.LT_ACCESS_KEY
+        run: npx playwright test --reporter=line
 
       # -------------------------
-      # 7. Run Playwright Tests (allure-results will be generated)
-      #  - monocart-report/report.html (Monocart)
+      #  UPLOAD TEST ARTIFACTS
       # -------------------------
-      - name: Run Playwright Tests
-        run: npx playwright test --reporter=line,allure-playwright
-
-      # -------------------------
-      # 8. Generate Allure HTML Report
-      # -------------------------
-      - name: Generate Allure Report
-        run: |
-          if [ -d "allure-results" ]; then
-            allure generate allure-results --clean -o allure-report
-          else
-            echo "No allure-results found"
-            exit 1
-          fi
-
-      # -------------------------
-      # 9. Prepare a single folder 'reports' that contains both reports
-      # -------------------------
-      - name: Prepare reports folder
-        run: |
-          rm -rf reports
-          mkdir -p reports
-          # Move/copy Allure HTML
-          if [ -d "allure-report" ]; then
-            mkdir -p reports/allure
-            cp -r allure-report/* reports/allure/
-          fi
-          # Copy Monocart HTML (report.html + assets)
-          if [ -d "monocart-report" ]; then
-            mkdir -p reports/monocart
-            cp -r monocart-report/* reports/monocart/
-          else
-            echo "Monocart report not found"
-          fi
-          # Optionally copy Playwright HTML too
-          if [ -d "playwright-report" ]; then
-            mkdir -p reports/playwright
-            cp -r playwright-report/* reports/playwright/
-          fi
-          echo "reports folder contents:"
-          ls -R reports
-
-      # -------------------------
-      # 10. Upload artifacts for convenience
-      # -------------------------
-      - name: Upload Allure Report artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report
-          if-no-files-found: error
-
-      - name: Upload Monocart artifact
+      - name: Upload Monocart Report
         uses: actions/upload-artifact@v4
         with:
           name: monocart-report
-          path: monocart-report
+          path: monocart-report/report.html
           if-no-files-found: warn
 
-      - name: Upload combined reports (reports/)
+      - name: Upload Allure Results
         uses: actions/upload-artifact@v4
         with:
-          name: reports
-          path: reports
-          if-no-files-found: error
+          name: allure-results
+          path: allure-results
+          if-no-files-found: warn
 
       # -------------------------
-      # 11. Save history for next run
+      #  BUILD & PUBLISH REPORTS TO GH PAGES
       # -------------------------
-      - name: Upload Allure History
+      - name: Download Allure History
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: allure-history
+          path: allure-history
+
+      - name: Generate Allure Report
+        run: |
+          npm install -g allure-commandline
+          allure generate allure-results --clean -o allure-report
+
+      - name: Upload Allure History for next run
         uses: actions/upload-artifact@v4
         with:
           name: allure-history
           path: allure-report/history
-          if-no-files-found: ignore
 
-      # -------------------------
-      # 12. Publish the combined reports folder to GitHub Pages
-      # -------------------------
-      - name: Deploy reports to GitHub Pages
+      - name: Deploy Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./reports
-          publish_branch: gh-pages
+          publish_dir: allure-report
+          destination_dir: allure-report
+
+      - name: Deploy Monocart Report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: monocart-report
+          destination_dir: monocart-report

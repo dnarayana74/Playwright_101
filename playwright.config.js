@@ -1,16 +1,17 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
+  testDir: './tests', // Test directory
   reporter: [
     ['line'],
     ['allure-playwright'],
     ["monocart-reporter", {
-      name: "Playwright Report",
+      name: "Playwright Execution Report",
       outputFile: "monocart-report/report.html",
       includeScreenshot: true,
-      includeTrace: true
-    }],
-    ['html', { open: 'never' }]
+      includeTrace: true,
+      ensureArtifactsDir: true
+    }]
   ],
 
   use: {
@@ -26,7 +27,6 @@ export default defineConfig({
   projects: [
     {
       name: 'LambdaTest Playwright Grid',
-      testDir: './tests', // Test directory
       use: {
         // LambdaTest capabilities
         browserName: 'chromium',
