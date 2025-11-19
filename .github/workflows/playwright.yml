@@ -58,14 +58,14 @@ jobs:
         with:
           name: allure-history
           path: allure-report/history
-        if-no-files-found: ignore
+          if-no-files-found: ignore
 
       - name: Upload Monocart Report
         uses: actions/upload-artifact@v4
         with:
           name: monocart-report
           path: monocart-report/index.html
-        if-no-files-found: warn
+          if-no-files-found: warn
 
       # ------------------ DEPLOY TO GH PAGES
       - name: Deploy Allure Report to GitHub Pages
