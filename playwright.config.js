@@ -4,6 +4,12 @@ export default defineConfig({
   reporter: [
     ['line'],
     ['allure-playwright'],
+    ["monocart-reporter", {
+      name: "Playwright Report",
+      outputFile: "monocart-report/report.html",
+      includeScreenshot: true,
+      includeTrace: true
+    }],
     ['html', { open: 'never' }]
   ],
 

@@ -15,7 +15,8 @@
     "@playwright/test": "^1.55.0",
     "@types/node": "^24.3.0",
     "allure-commandline": "^2.34.1",
-    "allure-playwright": "^3.4.2"
+    "allure-playwright": "^3.4.2",
+    "monocart-reporter": "^2.9.23"
   },
   "dependencies": {
     "@lambdatest/playwright-node-sdk": "^1.0.2",
