@@ -1,17 +1,17 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests', // Test directory
   reporter: [
     ['line'],
     ['allure-playwright'],
     ["monocart-reporter", {
-      name: "Playwright Execution Report",
-      outputFile: "monocart-report/report.html",
+      name: "Playwright Report",
+      outputDir: "monocart-report",   // ← FIXED
+      outputFile: "index.html",       // ← FIXED
       includeScreenshot: true,
-      includeTrace: true,
-      ensureArtifactsDir: true
-    }]
+      includeTrace: true
+    }],
+    ['html', { open: 'never' }]
   ],
 
   use: {
