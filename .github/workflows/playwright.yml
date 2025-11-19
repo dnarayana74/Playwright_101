@@ -1,10 +1,9 @@
-name: Playwright Tests & Reports
+name: Playwright + Allure + Monocart Report
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  pull_request:
-   workflow_dispatch:   # ← enables manual trigger
 
 jobs:
   test-and-publish:
@@ -14,71 +13,64 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ------------------ RESTORE HISTORY (not mandatory for first run)
+      - name: Download Allure History
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-history
+          path: allure-results/history
+        continue-on-error: true
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install Dependencies
+        run: npm ci
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Tests
-        env:
-          LT_USERNAME: process.env.LT_USERNAME
-          LT_ACCESS_KEY: process.env.LT_ACCESS_KEY
-        run: npx playwright test --reporter=line
+      - name: Install Allure CLI
+        run: npm install -g allure-commandline --unsafe-perm
 
-      # -------------------------
-      #  UPLOAD TEST ARTIFACTS
-      # -------------------------
-      - name: Upload Monocart Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: monocart-report
-          path: monocart-report/report.html
-          if-no-files-found: warn
+      # ------------------ RUN TESTS
+      - name: Run Playwright Tests
+        run: npx playwright test --reporter=line,allure-playwright,monocart-reporter
 
-      - name: Upload Allure Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results
-          path: allure-results
-          if-no-files-found: warn
-
-      # -------------------------
-      #  BUILD & PUBLISH REPORTS TO GH PAGES
-      # -------------------------
-      - name: Download Allure History
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: allure-history
-          path: allure-history
-
+      # ------------------ GENERATE ALLURE REPORT
       - name: Generate Allure Report
+        if: always()
         run: |
-          npm install -g allure-commandline
-          allure generate allure-results --clean -o allure-report
+          mkdir -p allure-results
+          allure generate allure-results -o allure-report --clean
 
-      - name: Upload Allure History for next run
+      # ------------------ UPLOAD ARTIFACTS
+      - name: Upload Allure Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+
+      - name: Upload Allure History
         uses: actions/upload-artifact@v4
         with:
           name: allure-history
           path: allure-report/history
+        if-no-files-found: ignore
 
+      - name: Upload Monocart Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: monocart-report
+          path: monocart-report/index.html
+        if-no-files-found: warn
+
+      # ------------------ DEPLOY TO GH PAGES
       - name: Deploy Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
           publish_dir: allure-report
-          destination_dir: allure-report
-
-      - name: Deploy Monocart Report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: monocart-report
-          destination_dir: monocart-report
