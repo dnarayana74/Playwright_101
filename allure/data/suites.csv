@@ -1,4 +1,0 @@
-"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"","4676","Input Form Submit validations and success flow","LambdaTest Playwright Grid","Wed Nov 19 11:02:33 UTC 2025","passed","Wed Nov 19 11:02:38 UTC 2025","","tests/submit-demo-form.spec.js","",""
-"","7764","Drag slider to 95 and validate value","LambdaTest Playwright Grid","Wed Nov 19 11:02:33 UTC 2025","passed","Wed Nov 19 11:02:41 UTC 2025","","tests/drag-drop-slider.spec.js","",""
-"","3967","Simple Form Demo - Validate message display","LambdaTest Playwright Grid","Wed Nov 19 11:02:33 UTC 2025","passed","Wed Nov 19 11:02:37 UTC 2025","","tests/simple-form-demo.spec.js","",""
